@@ -6,8 +6,11 @@ A command-line script written in Go(lang) that takes input the chart_url and ite
 chart_url is one of IMDb Top Indian Charts:
 
 ● Top Rated Indian Movies ( https://www.imdb.com/india/top-rated-indian-movies )
+
 ● Top Rated Tamil Movies ( https://www.imdb.com/india/top-rated-tamil-movies )
+
 ● Top Rated Telugu Movies ( https://www.imdb.com/india/top-rated-telugu-movies )
+
 
 The script returns a json string of the top items_count number of movie items (with
 attributes as listed below) in that particular IMDb chart.
