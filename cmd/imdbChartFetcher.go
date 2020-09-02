@@ -43,6 +43,7 @@ type MovieDetail struct {
 func sendForMarshal(jsonForm MovieDetail) {
 	js, _ := json.Marshal(jsonForm)
 	fmt.Println(string(js))
+
 }
 
 func collectText(n *html.Node, buf *bytes.Buffer) {
@@ -238,7 +239,6 @@ var imdbChartFetcherCmd = &cobra.Command{
 					}
 
 				}
-
 			}
 
 			for c := n.FirstChild; c != nil; c = c.NextSibling {

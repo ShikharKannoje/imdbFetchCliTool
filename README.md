@@ -1,6 +1,6 @@
 "# imdbFetchCliTool" 
 
-### IMDb Chart Fetcher
+### India IMDb Chart Fetcher
 
 A command-line script written in Go(lang) that takes input the chart_url and items_count , where
 chart_url is one of IMDb Top Indian Charts:
