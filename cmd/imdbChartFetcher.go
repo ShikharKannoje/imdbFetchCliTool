@@ -35,6 +35,9 @@ type MovieDetail struct {
 	Title              string `json:"title"`
 	Movie_release_year string `json:"movie_release_year"`
 	IMDB_rating        string `json:"imdb_rating"`
+	Duration           string `json:"duration"`
+	Genre              string `json:"genre"`
+	Summary            string `json:"summary"`
 }
 
 func sendForMarshal(jsonForm MovieDetail) {
@@ -83,11 +86,110 @@ and usage of using your command.`,
 		var f func(*html.Node)
 		f = func(n *html.Node) {
 
+			if n.Type == html.ElementNode && n.Data == "a" {
+				for _, a := range n.Attr {
+					if a.Key == "href" {
+						path := strings.Split(a.Val, "/")
+						//fmt.Println(path)
+						if len(path) < 2 {
+							break
+						}
+						if path[1] != "title" {
+							break
+						} else {
+							if count < movieCountLimit {
+								newURL := "https://www.imdb.com" + a.Val
+								resp2, err := http.Get(newURL)
+								//fmt.Println(newURL, "success")
+								if err != nil {
+									log.Println(err)
+								}
+								defer resp.Body.Close()
+
+								doc2, err := html.Parse(resp2.Body)
+								if err != nil {
+									log.Println(err)
+								}
+								var f2 func(*html.Node)
+								f2 = func(n *html.Node) {
+									if n.Type == html.ElementNode && n.Data == "div" {
+										text := &bytes.Buffer{}
+										for _, a := range n.Attr {
+											var DurationAndGenre string
+											if a.Key == "class" && a.Val == "subtext" {
+												collectText(n, text)
+												if text.String() != " " {
+													str := text.String()
+
+													DurationAndGenre = strings.TrimFunc(str, func(r rune) bool {
+														return !unicode.IsNumber(r)
+													})
+
+													DurationAndGenre = strings.ReplaceAll(DurationAndGenre, string(' '), "")
+													DurationAndGenre = strings.ReplaceAll(DurationAndGenre, "|", "")
+													DurationAndGenre = strings.ReplaceAll(DurationAndGenre, "\t", "")
+													t1 := strings.Split(DurationAndGenre, "\n")
+													var time string
+													var genre string
+													time = t1[0]
+													genre = t1[3]
+													i := 4
+													for i < len(t1) {
+														if genre[len(genre)-1] != byte(',') {
+															break
+														} else {
+															genre = genre + t1[i]
+															i++
+														}
+													}
+													//fmt.Println(time, genre)
+													jsonForm.Duration = time
+													jsonForm.Genre = genre
+												}
+
+											}
+											if a.Key == "class" && a.Val == "summary_text" {
+												collectText(n, text)
+												if text.String() != " " {
+													str := text.String()
+
+													summary := strings.TrimFunc(str, func(r rune) bool {
+														return !unicode.IsLetter(r)
+													})
+
+													jsonForm.Summary = summary
+													//fmt.Println(jsonForm)
+												}
+
+											}
+
+										}
+
+									}
+
+									for c := n.FirstChild; c != nil; c = c.NextSibling {
+										f2(c)
+									}
+
+								}
+
+								f2(doc2)
+
+							} else {
+								break
+							}
+
+						}
+
+					}
+				}
+			}
 			if n.Type == html.ElementNode && n.Data == "td" {
 				text := &bytes.Buffer{}
 				for _, a := range n.Attr {
 					var titleAndYear, imdbRatings string
 					if a.Key == "class" && a.Val == "titleColumn" {
+
 						collectText(n, text)
 						if text.String() != " " {
 							str := text.String()
@@ -96,7 +198,6 @@ and usage of using your command.`,
 								return !unicode.IsLetter(r) && !unicode.IsNumber(r)
 							})
 							titleAndYearSlice := strings.Split(titleAndYear, "\n")
-
 							jsonForm.Rank = strings.Replace(titleAndYearSlice[0], ".", "", -1)
 							jsonForm.Title = strings.Trim(titleAndYearSlice[1], " ")
 							jsonForm.Movie_release_year = strings.Replace(strings.Trim(titleAndYearSlice[2], " "), "(", "", -1)
@@ -120,6 +221,7 @@ and usage of using your command.`,
 							jsonForm.IMDB_rating = imdbRatings
 							if count < movieCountLimit {
 								count++
+								//fmt.Println(jsonForm)
 								sendForMarshal(jsonForm)
 							} else {
 								break
