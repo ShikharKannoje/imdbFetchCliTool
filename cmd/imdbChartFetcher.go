@@ -58,18 +58,31 @@ func collectText(n *html.Node, buf *bytes.Buffer) {
 var imdbChartFetcherCmd = &cobra.Command{
 	Use:   "imdbChartFetcher",
 	Short: "This command will pull movie details from IMDB list",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command.`,
+	Long: `This command require 2 arguments,
+	1.chart_url : URL of the Imdb Chart (chart_url is one of IMDb Top Indian Charts:
+		● Top Rated Indian Movies ( https://www.imdb.com/india/top-rated-indian-movies )
+		● Top Rated Tamil Movies ( https://www.imdb.com/india/top-rated-tamil-movies )
+		● Top Rated Telugu Movies ( https://www.imdb.com/india/top-rated-telugu-movies )
+	2.item_count :  .
+	The script returns output a json string of the top items_count number of movie items (with
+		attributes as listed below) in that particular IMDb chart.
+		● rank
+		● title
+		● movie_release_year
+		● imdb_rating
+		● summary
+		● duration
+		● genre`,
 	Run: func(cmd *cobra.Command, args []string) {
-		//fmt.Println("imdbChartFetcher called")
+
 		if len(args) != 2 {
 			fmt.Println("Invalid arguments")
-			//panic("Exiting")
+
 			os.Exit(0)
 		}
 		var fetchURL = args[0]
 		var movieCountLimit, _ = strconv.Atoi(args[1])
-		//fmt.Println(fetchURL, movieCountLimit)
+
 		count := 0
 		resp, err := http.Get(fetchURL)
 		if err != nil {
@@ -90,7 +103,7 @@ and usage of using your command.`,
 				for _, a := range n.Attr {
 					if a.Key == "href" {
 						path := strings.Split(a.Val, "/")
-						//fmt.Println(path)
+
 						if len(path) < 2 {
 							break
 						}
@@ -100,7 +113,7 @@ and usage of using your command.`,
 							if count < movieCountLimit {
 								newURL := "https://www.imdb.com" + a.Val
 								resp2, err := http.Get(newURL)
-								//fmt.Println(newURL, "success")
+
 								if err != nil {
 									log.Println(err)
 								}
@@ -142,7 +155,7 @@ and usage of using your command.`,
 															i++
 														}
 													}
-													//fmt.Println(time, genre)
+
 													jsonForm.Duration = time
 													jsonForm.Genre = genre
 												}
@@ -158,7 +171,7 @@ and usage of using your command.`,
 													})
 
 													jsonForm.Summary = summary
-													//fmt.Println(jsonForm)
+
 												}
 
 											}
@@ -201,8 +214,6 @@ and usage of using your command.`,
 							jsonForm.Rank = strings.Replace(titleAndYearSlice[0], ".", "", -1)
 							jsonForm.Title = strings.Trim(titleAndYearSlice[1], " ")
 							jsonForm.Movie_release_year = strings.Replace(strings.Trim(titleAndYearSlice[2], " "), "(", "", -1)
-							//jsonForm = jsonBuilder(titleAndYear)
-							//fmt.Println(jsonForm)
 						}
 
 					}
@@ -215,13 +226,9 @@ and usage of using your command.`,
 							imdbRatings = strings.TrimFunc(str, func(r rune) bool {
 								return !unicode.IsLetter(r) && !unicode.IsNumber(r)
 							})
-							//jsonForm.IMDB_rating = imdbRatings
-							//jsonBuilder(str2)
-							//fmt.Println("Moive Ratings : ", imdbRatings)
 							jsonForm.IMDB_rating = imdbRatings
 							if count < movieCountLimit {
 								count++
-								//fmt.Println(jsonForm)
 								sendForMarshal(jsonForm)
 							} else {
 								break
@@ -229,10 +236,6 @@ and usage of using your command.`,
 
 						}
 					}
-
-					//jsonbuilt = titleAndYear //+ "\n" + imdbRatings + "\n"
-					//fmt.Println(jsonbuilt)
-					//jsonBuilder(jsonbuilt)
 
 				}
 
